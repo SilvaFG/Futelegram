@@ -1,0 +1,44 @@
+from bs4 import BeautifulSoup
+from time import sleep
+import requests
+import html5lib
+import telebot
+from telethon.sync import TelegramClient
+from telethon.tl.types import InputPeerUser, InputPeerChannel
+from telethon import TelegramClient, sync, events
+api_id = '22495811'
+api_hash = '57b73684458f9002f223b1769d822fec'
+token = '5850320447:AAEpmmUpVqB-71x4Rvsqt9NpuDC2QQC-qvs'
+phone = '+5562984791780'
+client = TelegramClient('session', api_id, api_hash)
+
+client.connect()
+
+if not client.is_user_authorized():
+    client.send_code_request(phone)
+    client.sign_in(phone, input('Enter the code: '))
+while True:
+
+   site = "https://www.placardefutebol.com.br"
+   r = requests.get(site)
+   soup = BeautifulSoup(r.content, 'html5lib')
+   tudo = soup.find_all('div', attrs={'class': 'container content trending-box'})
+   for row in tudo:
+      ligas = row.find_all('div', class_='match-card-league-name')
+      tempo = row.find_all('div', class_='w-25 p-1 status text-center')
+      time_casa = row.find_all('h5', class_='text-right team_link')
+      time_fora = row.find_all('h5', class_='text-left team_link')
+      placar_time_casa = row.find_all('div', class_='w-25 p-1 match-score d-flex justify-content-end')
+      placar_time_fora = row.find_all('div', class_='w-25 p-1 match-score d-flex justify-content-start')
+      for i in range(len(ligas)):
+        try:
+           receiver = InputPeerUser('user_id', 'user_hash')
+           client.send_message('me', ligas[i].text)
+           message= (time_casa[i].text, placar_time_casa[i].text.strip(),'x', placar_time_fora[i].text.strip(),time_fora[i].text)
+           client.send_message('me',str(message))
+           client.send_message('me', tempo[i].text.strip())
+           client.send_message('me','-------------------------------------------------')
+        except Exception as e:
+           print(e)
+           client.disconnect()
+      sleep(600)
